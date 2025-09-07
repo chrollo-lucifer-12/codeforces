@@ -21,28 +21,33 @@ func NewTokenService(db *gorm.DB) *TokenService {
 
 func (t *TokenService) GenerateJWT(userId uuid.UUID, sessionId uuid.UUID, audience []string, ttl time.Duration) (string, error) {
 	claims := models.Claims{
-		UserID: userId,
+		UserID:    userId,
 		SessionID: sessionId,
-		Audience: audience,
+		Audience:  audience,
 	}
 
 	t.DB.Create(&claims)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId" : claims.UserID,
-		"sessionId" : claims.SessionID,
-		"aud" : claims.Audience,
-		"exp" : time.Now().Add(ttl).Unix(),
-	})	
+		"userId":    claims.UserID,
+		"sessionId": claims.SessionID,
+		"aud":       claims.Audience,
+		"exp":       time.Now().Add(ttl).Unix(),
+	})
 
 	return token.SignedString(jwtSecret)
 }
 
-func (t *TokenService) CreateRefreshToken (sessionId uuid.UUID, ttl time.Duration) (*models.RefreshToken, error) {
+func (t *TokenService) CreateRefreshToken(sessionId uuid.UUID, ttl time.Duration) (*models.RefreshToken, error) {
+
+	if err := t.DB.Where("session_id = ?", sessionId).Delete(&models.RefreshToken{}).Error; err != nil {
+		return nil, err
+	}
+
 	token := uuid.New().String()
 	refreshToken := &models.RefreshToken{
 		SessionID: sessionId,
-		Token: token,
+		Token:     token,
 		ExpiresAt: time.Now().Add(ttl),
 	}
 
@@ -53,7 +58,6 @@ func (t *TokenService) CreateRefreshToken (sessionId uuid.UUID, ttl time.Duratio
 	return refreshToken, nil
 }
 
-func (t *TokenService) RevokeRefreshToken (token string) error {
+func (t *TokenService) RevokeRefreshToken(token string) error {
 	return t.DB.Model(&models.RefreshToken{}).Where("token = ?", token).Update("revoked", true).Error
 }
-
