@@ -19,11 +19,11 @@ func NewTokenService(db *gorm.DB) *TokenService {
 	return &TokenService{DB: db}
 }
 
-func (t *TokenService) GenerateJWT(userId uuid.UUID, sessionId uuid.UUID, audience []string, ttl time.Duration) (string, error) {
+func (t *TokenService) GenerateJWT(userId uuid.UUID, sessionId uuid.UUID, role string, ttl time.Duration) (string, error) {
 	claims := models.Claims{
 		UserID:    userId,
 		SessionID: sessionId,
-		Audience:  audience,
+		Audience:  []string{role}, // optional DB persistence
 	}
 
 	t.DB.Create(&claims)
@@ -31,8 +31,10 @@ func (t *TokenService) GenerateJWT(userId uuid.UUID, sessionId uuid.UUID, audien
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":    claims.UserID,
 		"sessionId": claims.SessionID,
-		"aud":       claims.Audience,
+		"aud":       role, // store as string for easier AdminMiddleware check
 		"exp":       time.Now().Add(ttl).Unix(),
+		"iat":       time.Now().Unix(),
+		"jti":       uuid.New().String(),
 	})
 
 	return token.SignedString(jwtSecret)

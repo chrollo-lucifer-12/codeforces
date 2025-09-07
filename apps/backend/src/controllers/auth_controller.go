@@ -77,7 +77,7 @@ func Login(ctx *gin.Context, userService *services.UserService, sessionService *
 		ctx.JSON(400, gin.H{"error": "Error creating session"})
 	}
 
-	jwt, err := tokenService.GenerateJWT(findUser.ID, session.ID, []string{"user"}, 15*time.Minute)
+	jwt, err := tokenService.GenerateJWT(findUser.ID, session.ID, string(findUser.Role), 15*time.Minute)
 	if err != nil {
 		ctx.JSON(400, gin.H{"error": "Error creating JWT"})
 	}

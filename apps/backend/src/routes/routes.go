@@ -11,6 +11,8 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	api := r.Group("/api/v1")
 	{
 		CreateAuthRoutes(api, db)
+		CreateContestRoutes(api, db)
+		CreateAdminRoutes(api, db)
 	}
 
 	return r
