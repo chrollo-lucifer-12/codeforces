@@ -1,0 +1,55 @@
+package services
+
+import (
+	"time"
+
+	"github.com/chrollo-lucifer-12/backend/src/models"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type TokenService struct {
+	DB *gorm.DB
+}
+
+var jwtSecret = []byte("axqiDDn?y|eWEAV")
+
+func NewTokenService(db *gorm.DB) *TokenService {
+	return &TokenService{DB: db}
+}
+
+func (t *TokenService) GenerateJWT(userId uuid.UUID, sessionId uuid.UUID, audience []string, ttl time.Duration) (string, error) {
+	claims := models.Claims{
+		UserID: userId,
+		SessionID: sessionId,
+		Audience: audience,
+	}
+
+	t.DB.Create(&claims)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userId" : claims.UserID,
+		"sessionId" : claims.SessionID,
+		"aud" : claims.Audience,
+		"exp" : time.Now().Add(ttl).Unix(),
+	})	
+
+	return token.SignedString(jwtSecret)
+}
+
+
+func (t *TokenService) CreateRefreshToken (sessionId uuid.UUID, ttl time.Duration) (*models.RefreshToken, error) {
+	token := uuid.New().String()
+	refreshToken := &models.RefreshToken{
+		SessionID: sessionId,
+		Token: token,
+		ExpiresAt: time.Now().Add(ttl),
+	}
+
+	if err := t.DB.Create(refreshToken).Error; err != nil {
+		return nil, err
+	}
+
+	return refreshToken, nil
+}

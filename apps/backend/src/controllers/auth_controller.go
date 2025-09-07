@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/chrollo-lucifer-12/backend/src/services"
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,11 @@ import (
 )
 
 type RegisterRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
@@ -44,4 +50,52 @@ func Register(ctx *gin.Context, userService *services.UserService) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "registration successful", "userId": userCreated.ID})
+}
+
+func Login(ctx *gin.Context, userService *services.UserService, sessionService *services.SessionService, tokenService *services.TokenService) {
+
+	var req LoginRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid request", "userId": nil})
+		return
+	}
+
+	findUser, err := userService.FindUser(req.Username)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "User not found"})
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(findUser.Password), []byte(req.Password))
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Wrong password"})
+	}
+
+	session, err := sessionService.CreateSession(findUser.ID)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Error creating session"})
+	}
+
+	jwt, err := tokenService.GenerateJWT(findUser.ID, session.ID, []string{"user"}, 15*time.Minute)
+	if err != nil  {
+		ctx.JSON(400, gin.H{"error": "Error creating JWT"})
+	}
+
+	refreshToken, err := tokenService.CreateRefreshToken(session.ID, 7*24*time.Hour)
+	if err != nil {
+    	ctx.JSON(500, gin.H{"error": "Error creating refresh token"})
+    	return
+	}
+
+	ctx.SetCookie(
+		"refresh_token",
+		refreshToken.Token,
+		int(7*24*time.Hour.Seconds()),
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	ctx.JSON(200, gin.H{"userId" : findUser.ID, "accessToken" : jwt})
 }
