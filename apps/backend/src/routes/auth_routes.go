@@ -22,5 +22,9 @@ func CreateAuthRoutes(rg *gin.RouterGroup, database *gorm.DB) {
 		auth.POST("/login", func(ctx *gin.Context) {
 			controllers.Login(ctx, userService, sessionService, tokenService)
 		})
+
+		auth.POST("/logout", func(ctx *gin.Context) {
+			controllers.Logout(ctx, sessionService, tokenService)
+		})
 	}
 }

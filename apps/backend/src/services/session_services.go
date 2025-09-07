@@ -2,7 +2,6 @@ package services
 
 import (
 	"time"
-
 	"github.com/chrollo-lucifer-12/backend/src/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -30,4 +29,8 @@ func (s *SessionService) CreateSession(userId uuid.UUID) (*models.Session,  erro
 	}
 
 	return session, nil
+}
+
+func (s *SessionService) DeleteSession (sessionId uuid.UUID) error {
+	return s.DB.Model(&models.Session{}).Where("id = ?", sessionId).Update("revoked", true).Error
 }

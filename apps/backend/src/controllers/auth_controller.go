@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/chrollo-lucifer-12/backend/src/models"
 	"github.com/chrollo-lucifer-12/backend/src/services"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -77,14 +78,14 @@ func Login(ctx *gin.Context, userService *services.UserService, sessionService *
 	}
 
 	jwt, err := tokenService.GenerateJWT(findUser.ID, session.ID, []string{"user"}, 15*time.Minute)
-	if err != nil  {
+	if err != nil {
 		ctx.JSON(400, gin.H{"error": "Error creating JWT"})
 	}
 
 	refreshToken, err := tokenService.CreateRefreshToken(session.ID, 7*24*time.Hour)
 	if err != nil {
-    	ctx.JSON(500, gin.H{"error": "Error creating refresh token"})
-    	return
+		ctx.JSON(500, gin.H{"error": "Error creating refresh token"})
+		return
 	}
 
 	ctx.SetCookie(
@@ -97,5 +98,42 @@ func Login(ctx *gin.Context, userService *services.UserService, sessionService *
 		true,
 	)
 
-	ctx.JSON(200, gin.H{"userId" : findUser.ID, "accessToken" : jwt})
+	ctx.JSON(200, gin.H{"userId": findUser.ID, "accessToken": jwt})
+}
+
+func Logout(ctx *gin.Context, sessionService *services.SessionService, tokenService *services.TokenService) {
+	refreshTokenCookie, err := ctx.Cookie("refresh_token")
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "No refresh token"})
+		return
+	}
+
+	var rt models.RefreshToken
+	if err := tokenService.DB.Where("token = ?", refreshTokenCookie).First(&rt).Error; err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid refresh token"})
+		return
+	}
+
+	rt.Revoked = true
+	if err := tokenService.DB.Save(&rt).Error; err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to revoke refresh token"})
+		return
+	}
+
+	if err := sessionService.DeleteSession(rt.SessionID); err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to revoke session"})
+		return
+	}
+
+	ctx.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/",
+		"",
+		true, 
+		true, 
+	)
+
+	ctx.JSON(200, gin.H{"message": "Logged out successfully"})
 }

@@ -38,7 +38,6 @@ func (t *TokenService) GenerateJWT(userId uuid.UUID, sessionId uuid.UUID, audien
 	return token.SignedString(jwtSecret)
 }
 
-
 func (t *TokenService) CreateRefreshToken (sessionId uuid.UUID, ttl time.Duration) (*models.RefreshToken, error) {
 	token := uuid.New().String()
 	refreshToken := &models.RefreshToken{
@@ -53,3 +52,8 @@ func (t *TokenService) CreateRefreshToken (sessionId uuid.UUID, ttl time.Duratio
 
 	return refreshToken, nil
 }
+
+func (t *TokenService) RevokeRefreshToken (token string) error {
+	return t.DB.Model(&models.RefreshToken{}).Where("token = ?", token).Update("revoked", true).Error
+}
+
