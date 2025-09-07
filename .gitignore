@@ -36,3 +36,51 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Build binaries
+apps/backend/*.exe
+apps/backend/*.exe~
+apps/backend/*.dll
+apps/backend/*.so
+apps/backend/*.dylib
+apps/backend/*.test
+apps/backend/*.out
+
+# Build directories
+apps/backend/bin/
+apps/backend/build/
+
+# Dependency directories (if vendored)
+apps/backend/vendor/
+
+# Go modules cache (local, not committed)
+apps/backend/pkg/mod/
+apps/backend/pkg/sumdb/
+
+# IDE/editor files
+apps/backend/.idea/
+apps/backend/.vscode/
+apps/backend/*.swp
+apps/backend/*.swo
+
+# OS-specific files
+apps/backend/.DS_Store
+apps/backend/Thumbs.db
+
+# Environment files
+apps/backend/.env
+apps/backend/.env.local
+apps/backend/.env.*.local
+
+# Logs
+apps/backend/*.log
+
+# Coverage files
+apps/backend/coverage.out
+
+# Temporary files
+apps/backend/*.tmp
+apps/backend/*.temp
+
+
+apps/frontend/.env
