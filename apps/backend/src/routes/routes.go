@@ -10,4 +10,5 @@ func SetUpRoutes(router *gin.Engine, db *gorm.DB) {
 	UserRoutes(api, db)
 	AuthRoutes(api, db)
 	ChallengeRoutes(api, db)
+	UserRepoRoutes(api, db)
 }
