@@ -5,15 +5,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupRoutes(db *gorm.DB) *gin.Engine {
-	r := gin.Default()
-
-	api := r.Group("/api/v1")
-	{
-		CreateAuthRoutes(api, db)
-		CreateContestRoutes(api, db)
-		CreateAdminRoutes(api, db)
-	}
-
-	return r
+func SetUpRoutes(router *gin.Engine, db *gorm.DB) {
+	api := router.Group("/api/v1")
+	UserRoutes(api, db)
+	AuthRoutes(api, db)
 }

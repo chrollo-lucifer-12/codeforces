@@ -1,15 +1,21 @@
 package main
 
 import (
+	"log"
+
 	"github.com/chrollo-lucifer-12/backend/src/db"
 	"github.com/chrollo-lucifer-12/backend/src/routes"
-)
+	"github.com/gin-gonic/gin"
+)	
 
-var jwtSecret = []byte("axqiDDn?y|eWEAV")
+func main () {
+	router := gin.Default()
+	database, err := db.Database()
 
-func main() {
-	database := db.InitDB()
-	r := routes.SetupRoutes(database)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	r.Run()
+	routes.SetUpRoutes(router, database)
+	router.Run()
 }
