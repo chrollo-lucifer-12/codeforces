@@ -6,10 +6,8 @@ import (
 	"strings"
 
 	"github.com/chrollo-lucifer-12/backend/src/config"
-	"github.com/chrollo-lucifer-12/backend/src/models"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -49,18 +47,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 		userIdStr := claims["user_id"].(string)
 
-		userId, err := uuid.Parse(userIdStr)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid user_id format"})
-			return
-		}
-
-		var findUser models.User
-		if err := db.Where("id = ?", userId).Find(&findUser); err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-			return
-		}
-		c.Set("user_id", userId)
+		c.Set("user_id", userIdStr)
 		c.Next()
 	}
 }
