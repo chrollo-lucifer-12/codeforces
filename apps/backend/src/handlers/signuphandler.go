@@ -16,6 +16,11 @@ type SignupHandlerInput struct {
 	Fullname string `json:"fullname"`
 }
 
+type LoginHandlerInput struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 func SignupHandler(ctx *gin.Context, db *gorm.DB) {
 	var body SignupHandlerInput
 
@@ -25,7 +30,6 @@ func SignupHandler(ctx *gin.Context, db *gorm.DB) {
 	}
 
 	var existingUser models.User
-	
 
 	if err := db.Where("email = ?", body.Email).Find(&existingUser).Error; err != nil {
 		ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})

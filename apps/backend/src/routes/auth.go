@@ -12,5 +12,8 @@ func AuthRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 		auth.POST("/signup", func(ctx *gin.Context) {
 			handlers.SignupHandler(ctx, db)
 		})
+		auth.POST("/login", func(ctx *gin.Context) {
+			handlers.LoginHandler(ctx, db)
+		})
 	}
 }
